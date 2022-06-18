@@ -5,16 +5,19 @@ BINARY := main
 .PHONY:
 all: debug
 
+FLAGS = -MMD -MP
+
 .PHONY:
-debug: FLAGS = -DDEBUG -g
+debug: FLAGS += -DDEBUG -g
 debug: $(BINARY)
 
 .PHONY:
-release: FLAGS = -O2 -march=native -mtune=native
+release: FLAGS += -O2 -march=native -mtune=native
 release: $(BINARY)
 
 SOURCES := $(shell find $(SRCDIR) -name \*.cpp)
 HEADERS := $(shell find $(SRCDIR) -name \*.h)
+DEPENDS := $(addprefix $(BUILDDIR)/, $(notdir $(SOURCES:.cpp=.d)))
 OBJECTS := $(addprefix $(BUILDDIR)/, $(notdir $(SOURCES:.cpp=.o)))
 DIRS := $(dir $(SOURCES))
 INCLUDES := $(foreach dir, $(dir $(HEADERS)), $(addprefix -I, $(dir)))
@@ -23,12 +26,14 @@ VPATH := $(DIRS)
 CFLAGS = $(FLAGS) -Wall -Wextra -std=c17
 CXXFLAGS = $(FLAGS) -Wall -Wextra -std=c++17
 #LDFLAGS := 
-LDLIBS := -lm
+#LDLIBS := -lm
+
+-include $(DEPENDS)
 
 $(BINARY): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-$(OBJECTS): $(BUILDDIR)/%o: $(SRCDIR)/%cpp $(HEADERS) | $(BUILDDIR)
+$(OBJECTS): $(BUILDDIR)/%o: $(SRCDIR)/%cpp Makefile | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
 
 $(BUILDDIR):
@@ -36,5 +41,5 @@ $(BUILDDIR):
 
 .PHONY:
 clean:
-	$(RM) $(OBJECTS) $(BINARY)
+	$(RM) $(OBJECTS) $(BINARY) $(DEPENDS)
 	$(RM) -d $(BUILDDIR)

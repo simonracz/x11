@@ -2,16 +2,15 @@ SRCDIR := $(CURDIR)/src
 BUILDDIR := $(CURDIR)/build
 BINARY := main
 
-.PHONY:
+.PHONY: all debug release clean
+
 all: debug
 
 FLAGS = -MMD -MP
 
-.PHONY:
 debug: FLAGS += -DDEBUG -g
 debug: $(BINARY)
 
-.PHONY:
 release: FLAGS += -O2 -march=native -mtune=native
 release: $(BINARY)
 
@@ -39,7 +38,6 @@ $(OBJECTS): $(BUILDDIR)/%o: $(SRCDIR)/%cpp Makefile | $(BUILDDIR)
 $(BUILDDIR):
 	mkdir $(BUILDDIR)
 
-.PHONY:
 clean:
 	$(RM) $(OBJECTS) $(BINARY) $(DEPENDS)
 	$(RM) -d $(BUILDDIR)

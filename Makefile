@@ -16,9 +16,10 @@ release: $(BINARY)
 
 SOURCES := $(shell find $(SRCDIR) -name \*.cpp)
 HEADERS := $(shell find $(SRCDIR) -name \*.h)
-DEPENDS := $(addprefix $(BUILDDIR)/, $(notdir $(SOURCES:.cpp=.d)))
-OBJECTS := $(addprefix $(BUILDDIR)/, $(notdir $(SOURCES:.cpp=.o)))
+DEPENDS := $(subst $(SRCDIR),$(BUILDDIR),$(SOURCES:.cpp=.d))
+OBJECTS := $(subst $(SRCDIR),$(BUILDDIR),$(SOURCES:.cpp=.o))
 DIRS := $(dir $(SOURCES))
+OBJDIRS := $(subst $(SRCDIR),$(BUILDDIR),$(DIRS))
 INCLUDES := $(foreach dir, $(dir $(HEADERS)), $(addprefix -I, $(dir)))
 VPATH := $(DIRS)
 
@@ -32,12 +33,15 @@ CXXFLAGS = $(FLAGS) -Wall -Wextra -std=c++17
 $(BINARY): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-$(OBJECTS): $(BUILDDIR)/%o: $(SRCDIR)/%cpp Makefile | $(BUILDDIR)
+$(OBJECTS): $(BUILDDIR)/%o: $(SRCDIR)/%cpp Makefile | $(BUILDDIR) $(OBJDIRS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
 
 $(BUILDDIR):
 	mkdir $(BUILDDIR)
 
+$(OBJDIRS):
+	mkdir -p $@
+
 clean:
-	$(RM) $(OBJECTS) $(BINARY) $(DEPENDS)
-	$(RM) -d $(BUILDDIR)
+	@$(RM) $(OBJECTS) $(BINARY) $(DEPENDS)
+	@$(RM) -rd $(BUILDDIR)
